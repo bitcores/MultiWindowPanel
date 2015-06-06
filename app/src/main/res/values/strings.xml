@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MultiWindow Panel</string>
+    <string name="multipanel_cocktail_name">MultiWindow Panel</string>
+    <string name="multipanel_cocktail_desc">MultiWindow Launcher Panel</string>
+    <string name="emptyview">No MultiWindow apps to list here</string>
+    <string name="strictbox">Strict</string>
+    <string name="cancelbutton">Cancel</string>
+    <string name="savebutton">Done</string>
+    <string name="warningtext">Strict mode displays only Apps that report MultiWindow compatibility.\nDisabling this will allow you to add Apps that may not launch in a window or may crash.</string>
+    <string name="skipwarning">Do not show next time</string>
+</resources>
