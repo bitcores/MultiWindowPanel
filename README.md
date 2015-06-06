@@ -3,6 +3,7 @@ Panel App for Samsung Galaxy devices that support Edge.<br />
 May only support Note Edge series.<br />
 <br />
 Launch Apps in Multi Window Mode from the Panel.<br />
+Unfortunately the Landscape mode display is a bit of a hackjob as yet. I hope to fix this but it is going to take time to work out how.<br />
 <br />
 A bit of a note: the proper way to check if an App supports multiwindow is to check the App's meta-data, any App that does not state<br />
 support should load in normal fullscreen mode. The Strict mode shows only the Apps that announce they are multiwindow enabled.<br />
