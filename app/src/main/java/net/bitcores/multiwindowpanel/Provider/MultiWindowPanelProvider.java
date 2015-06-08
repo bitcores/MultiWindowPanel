@@ -31,14 +31,13 @@ public class MultiWindowPanelProvider extends SlookCocktailProvider {
         String action = intent.getAction();
         if (action.equals(LAUNCH_ACTION)) {
             PackageManager pm = context.getPackageManager();
-
             String packageName = intent.getStringExtra(PACKAGE_NAME);
             String className = intent.getStringExtra(CLASS_NAME);
-            //Intent mIntent = pm.getLaunchIntentForPackage(packageName);
+
             Intent mIntent = new Intent(Intent.ACTION_MAIN);
             mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             mIntent.setComponent(new ComponentName(packageName, className));
-            //mIntent.setPackage(packageName);
+
             SMultiWindowActivity.makeMultiWindowIntent(mIntent, 0.6f);
 
             if (mIntent.resolveActivity(pm) != null) {
@@ -51,29 +50,27 @@ public class MultiWindowPanelProvider extends SlookCocktailProvider {
 
     @Override
     public void onUpdate(Context context, SlookCocktailManager cocktailBarManager, int[] cocktailIds) {
-        Intent intent = new Intent(context, MultiWindowPanelService.class);
-        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-
-        RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.multipanel_layout);
+        RemoteViews layout = new RemoteViews(context.getPackageName(), R.layout.multipanel_layout);
 
         Intent configIntent = new Intent(context, MultiWindowPanelConfig.class);
-        configIntent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+        configIntent.setData(Uri.parse(configIntent.toUri(Intent.URI_INTENT_SCHEME)));
         PendingIntent configPending = PendingIntent.getActivity(context, 999922, configIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        rv.setOnClickPendingIntent(R.id.multiSettingLogo, configPending);
+        layout.setOnClickPendingIntent(R.id.multiSettingLogo, configPending);
 
-        rv.setRemoteAdapter(R.id.multiListView, intent);
-
-        rv.setEmptyView(R.id.multiListView, R.id.emptyView);
+        Intent intent = new Intent(context, MultiWindowPanelService.class);
+        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+        layout.setRemoteAdapter(R.id.multiListView, intent);
 
         Intent launchIntent = new Intent(context, MultiWindowPanelProvider.class);
         launchIntent.setAction(MultiWindowPanelProvider.LAUNCH_ACTION);
         launchIntent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-
         PendingIntent launchPending = PendingIntent.getBroadcast(context, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        rv.setPendingIntentTemplate(R.id.multiListView, launchPending);
+        layout.setPendingIntentTemplate(R.id.multiListView, launchPending);
+
+        layout.setEmptyView(R.id.multiListView, R.id.emptyView);
 
         for (int i = 0; i < cocktailIds.length; i++) {
-            cocktailBarManager.updateCocktail(cocktailIds[i], rv);
+            cocktailBarManager.updateCocktail(cocktailIds[i], layout);
         }
 
         super.onUpdate(context, cocktailBarManager, cocktailIds);

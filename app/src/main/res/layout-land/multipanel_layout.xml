@@ -6,7 +6,7 @@
 
     <LinearLayout
         android:id="@+id/multiHeaderLayout"
-        android:layout_width="70dp"
+        android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
@@ -20,14 +20,14 @@
 
     </LinearLayout>
 
-    <ListView
+    <HorizontalListView
         android:id="@+id/multiListView"
         android:layout_width="match_parent"
-        android:layout_height="460dp"
+        android:layout_height="match_parent"
         android:descendantFocusability="beforeDescendants"
-        android:transformPivotY="0dp"
-        android:transformPivotX="40dp"
-        android:rotation="-90"/>
+        android:scrollbarStyle="insideOverlay"
+        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp" />
 
     <TextView
         android:id="@+id/emptyView"
