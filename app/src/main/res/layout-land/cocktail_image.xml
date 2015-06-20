@@ -6,11 +6,12 @@
 
     <ImageView
         android:id="@+id/cocktailImageView"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginLeft="5dp"
-        android:layout_marginStart="5dp"
-        android:layout_marginRight="5dp"
-        android:layout_marginEnd="5dp" />
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp" />
 
 </LinearLayout>

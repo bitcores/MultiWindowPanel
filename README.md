@@ -4,6 +4,7 @@ May only support Note Edge series.<br />
 <br />
 Launch Apps in Multi Window Mode from the Panel.<br />
 Landscape mode fixed in v1.1. Kek.<br />
+Cocktail should update correctly on config change in v1.2.<br />
 <br />
 A bit of a note: the proper way to check if an App supports multiwindow is to check the App's meta-data, any App that does not state<br />
 support should load in normal fullscreen mode. The Strict mode shows only the Apps that announce they are multiwindow enabled.<br />

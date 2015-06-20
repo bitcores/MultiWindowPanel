@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 
@@ -28,6 +29,8 @@ public class MultiWindowPanelProvider extends SlookCocktailProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+
         String action = intent.getAction();
         if (action.equals(LAUNCH_ACTION)) {
             PackageManager pm = context.getPackageManager();
@@ -43,13 +46,26 @@ public class MultiWindowPanelProvider extends SlookCocktailProvider {
             if (mIntent.resolveActivity(pm) != null) {
                 context.startActivity(mIntent);
             }
+        } else if (action.equals("net.bitcores.multiwindowpanel.COCKTAIL_UPDATE")) {
+            ComponentName multiwindowCocktail = new ComponentName(context, MultiWindowPanelProvider.class);
+            SlookCocktailManager cocktailBarManager = SlookCocktailManager.getInstance(context);
+            int[] cocktailIds = cocktailBarManager.getCocktailIds(multiwindowCocktail);
+
+            for (int id : cocktailIds) {
+                cocktailBarManager.notifyCocktailViewDataChanged(id, R.id.multiListView);
+            }
         }
 
-        super.onReceive(context, intent);
     }
 
     @Override
     public void onUpdate(Context context, SlookCocktailManager cocktailBarManager, int[] cocktailIds) {
+        super.onUpdate(context, cocktailBarManager, cocktailIds);
+
+        updateCocktails(context, cocktailBarManager, cocktailIds);
+    }
+
+    private void updateCocktails(Context context, SlookCocktailManager cocktailBarManager, int[] cocktailIds) {
         RemoteViews layout = new RemoteViews(context.getPackageName(), R.layout.multipanel_layout);
 
         Intent configIntent = new Intent(context, MultiWindowPanelConfig.class);
@@ -71,9 +87,8 @@ public class MultiWindowPanelProvider extends SlookCocktailProvider {
 
         for (int i = 0; i < cocktailIds.length; i++) {
             cocktailBarManager.updateCocktail(cocktailIds[i], layout);
+            Log.i("MultiWindowPanel", "updating cocktail");
         }
-
-        super.onUpdate(context, cocktailBarManager, cocktailIds);
     }
 
 }

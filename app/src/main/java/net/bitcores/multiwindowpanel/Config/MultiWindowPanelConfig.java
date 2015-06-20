@@ -23,7 +23,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -31,9 +30,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by bitcores on 2015-06-01.
@@ -43,10 +40,10 @@ public class MultiWindowPanelConfig extends Activity {
     private static ListView previewListView;
     private GridView itemGridView;
     private CheckBox strictCheckBox;
-    private String[] params = new String[1];
 
     private static Boolean mStrict = false;
     private static Boolean mSkipWarning = false;
+
     public static List<String> mLauncherItems = new ArrayList<String>();
 
     @Override
@@ -150,8 +147,7 @@ public class MultiWindowPanelConfig extends Activity {
     }
 
     private void makeGridView() {
-        List<ResolveInfo> mMultiWindowAppList = new ArrayList<ResolveInfo>();
-        Set<String> packageList = new HashSet<String>();
+        List<String> packageList = new ArrayList<String>();
         PackageManager pm = getApplicationContext().getPackageManager();
 
         Intent intent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
@@ -183,16 +179,16 @@ public class MultiWindowPanelConfig extends Activity {
                 }
 
                 if (!bUnSupportedMultiWindow) {
-                    mMultiWindowAppList.add(r);
                     ComponentInfo selectAppInfo = r.activityInfo != null ? r.activityInfo : r.serviceInfo;
                     String packageName = selectAppInfo.packageName;
                     String name = selectAppInfo.name;
+
                     packageList.add(packageName+","+name);
                 }
             }
         }
 
-        GridViewAdapter adapter = new GridViewAdapter(this, mMultiWindowAppList);
+        GridViewAdapter adapter = new GridViewAdapter(this, packageList);
         itemGridView.setAdapter(adapter);
     }
 
@@ -202,12 +198,12 @@ public class MultiWindowPanelConfig extends Activity {
         previewListView.setAdapter(adapter);
     }
 
-    public static void checkList(Context context, Set<String> packageList) {
+    public static void checkList(Context context, List<String> packageList) {
         String[] launcherList = mLauncherItems.toArray(new String[mLauncherItems.size()]);
 
-        for (int i = 0; i < launcherList.length; i++) {
-            if (!packageList.contains(launcherList[i])){
-                mLauncherItems.remove(launcherList[i]);
+        for (String aLauncherList : launcherList) {
+            if (!packageList.contains(aLauncherList)) {
+                mLauncherItems.remove(aLauncherList);
             }
         }
 
@@ -216,13 +212,127 @@ public class MultiWindowPanelConfig extends Activity {
 }
 
 class GridViewAdapter extends BaseAdapter {
-    Context mContext;
-    private List<ResolveInfo> appList = new ArrayList<ResolveInfo>();
-    private Set<String> packageList = new HashSet<String>();
+    private Context mContext;
+    private List<String> packageList = new ArrayList<String>();
+    private LayoutInflater inflater;
+    private PackageManager pm;
 
-    public GridViewAdapter(Context context, List<ResolveInfo> list) {
+    public GridViewAdapter(Context context, List<String> list) {
         mContext = context;
-        appList = list;
+        packageList = list;
+        inflater = LayoutInflater.from(mContext);
+        pm = mContext.getPackageManager();
+    }
+
+    public int getCount() {
+        return packageList.size();
+    }
+
+    public Object getItem(int position) {
+        return position;
+    }
+
+    public long getItemId(int position) {
+        return 0;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        if (position >= packageList.size()) {
+            return null;
+        }
+
+        View v;
+        ViewHolder holder;
+        final String storeName = packageList.get(position);
+
+        if (convertView == null) {
+            v = inflater.inflate(R.layout.griditem_layout, parent, false);
+            holder = new ViewHolder();
+            holder.iv = (ImageView)v.findViewById(R.id.gridImageView);
+            holder.tv = (TextView)v.findViewById(R.id.gridTextView);
+            holder.cb = (CheckBox)v.findViewById(R.id.gridCheckBox);
+            v.setTag(holder);
+        } else {
+            v = convertView;
+            holder = (ViewHolder)v.getTag();
+        }
+
+        String[] split = storeName.split(",");
+        String packageName = split[0];
+        String name = split[1];
+
+        ComponentName componentName = new ComponentName(packageName, name);
+
+        String label = "";
+        try {
+            label = pm.getActivityInfo(componentName, 0).loadLabel(pm).toString();
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        holder.tv.setText(label);
+
+        Drawable appIcon = null;
+        try {
+            appIcon = pm.getActivityIcon(componentName);
+        } catch (PackageManager.NameNotFoundException e) {
+            // hurf
+        }
+        if (appIcon != null) {
+            holder.iv.setImageBitmap(((BitmapDrawable) appIcon).getBitmap());
+        }
+
+        if (MultiWindowPanelConfig.mLauncherItems.contains(storeName)) {
+            holder.cb.setChecked(true);
+        } else {
+            holder.cb.setChecked(false);
+        }
+        holder.cb.setTag(storeName);
+
+        View.OnClickListener clickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CheckBox cb = (CheckBox)v;
+
+                if (cb.isChecked()) {
+                    if(!MultiWindowPanelConfig.mLauncherItems.contains(storeName)) {
+                        MultiWindowPanelConfig.mLauncherItems.add(storeName);
+                    }
+                } else {
+                    MultiWindowPanelConfig.mLauncherItems.remove(storeName);
+                }
+
+                MultiWindowPanelConfig.makeListView(mContext);
+            }
+        };
+
+        holder.cb.setOnClickListener(clickListener);
+
+        if (position == (packageList.size() - 1)) {
+            MultiWindowPanelConfig.checkList(mContext, packageList);
+        }
+
+        return v;
+    }
+
+    private class ViewHolder {
+        public ImageView iv;
+        public TextView tv;
+        public CheckBox cb;
+    }
+}
+
+class ListViewAdapter extends BaseAdapter {
+    private Context mContext;
+    private List<String> appList = new ArrayList<String>();
+    private LayoutInflater inflater;
+    private PackageManager pm;
+
+    public ListViewAdapter(Context context) {
+        mContext = context;
+        appList.addAll(MultiWindowPanelConfig.mLauncherItems);
+        inflater = LayoutInflater.from(mContext);
+        pm = mContext.getPackageManager();
     }
 
     public int getCount() {
@@ -243,22 +353,22 @@ class GridViewAdapter extends BaseAdapter {
             return null;
         }
 
-        View v = View.inflate(mContext, R.layout.griditem_layout, null);
-        ImageView iv = (ImageView)v.findViewById(R.id.gridImageView);
-        TextView tv = (TextView)v.findViewById(R.id.gridTextView);
-        final CheckBox cb = (CheckBox)v.findViewById(R.id.gridCheckBox);
+        View v;
+        ViewHolder holder;
+        if (convertView == null) {
+            v = inflater.inflate(R.layout.cocktail_image, parent, false);
+            holder = new ViewHolder();
+            holder.iv = (ImageView)v.findViewById(R.id.cocktailImageView);
+            v.setTag(holder);
+        } else {
+            v = convertView;
+            holder = (ViewHolder)v.getTag();
+        }
 
-        PackageManager pm = mContext.getApplicationContext().getPackageManager();
+        String storeName = appList.get(position);
+        String[] params = storeName.split(",");
 
-        ResolveInfo appInfo = appList.get(position);
-        ComponentInfo selectAppInfo = appInfo.activityInfo != null ? appInfo.activityInfo : appInfo.serviceInfo;
-        String packageName = selectAppInfo.packageName;
-        String name = selectAppInfo.name;
-        ComponentName componentName = new ComponentName(packageName, name);
-        final String storeName = packageName + "," + name;
-        packageList.add(storeName);
-        String label = ((CharSequence)selectAppInfo.loadLabel(pm)).toString();
-
+        ComponentName componentName = new ComponentName(params[0], params[1]);
         Drawable appIcon = null;
         try {
             appIcon = pm.getActivityIcon(componentName);
@@ -266,87 +376,13 @@ class GridViewAdapter extends BaseAdapter {
             // hurf
         }
         if (appIcon != null) {
-            iv.setImageBitmap(((BitmapDrawable) appIcon).getBitmap());
-        }
-        tv.setText(label);
-
-        if (MultiWindowPanelConfig.mLauncherItems.contains(storeName)) {
-            cb.setChecked(true);
-        }
-        iv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                cb.setChecked(!cb.isChecked());
-            }
-        });
-        cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    if(!MultiWindowPanelConfig.mLauncherItems.contains(storeName)) {
-                        MultiWindowPanelConfig.mLauncherItems.add(storeName);
-                    }
-                } else {
-                    MultiWindowPanelConfig.mLauncherItems.remove(storeName);
-                }
-
-                MultiWindowPanelConfig.makeListView(mContext);
-            }
-        });
-
-        if (position == (appList.size() -1)) {
-            MultiWindowPanelConfig.checkList(mContext, packageList);
+            holder.iv.setImageBitmap(((BitmapDrawable) appIcon).getBitmap());
         }
 
         return v;
     }
-}
 
-class ListViewAdapter extends BaseAdapter {
-    Context mContext;
-    private String[] appList = null;
-
-    public ListViewAdapter(Context context) {
-        mContext = context;
-        appList = MultiWindowPanelConfig.mLauncherItems.toArray(new String[MultiWindowPanelConfig.mLauncherItems.size()]);
-}
-
-    public int getCount() {
-        return appList.length;
-    }
-
-    public Object getItem(int position) {
-        return position;
-    }
-
-    public long getItemId(int position) {
-        return 0;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        if (position >= appList.length) {
-            return null;
-        }
-
-        View v = View.inflate(mContext, R.layout.cocktail_image, null);
-        ImageView iv = (ImageView)v.findViewById(R.id.cocktailImageView);
-
-        PackageManager pm = mContext.getApplicationContext().getPackageManager();
-
-        String storeName = appList[position];
-        String[] names = storeName.split(",");
-
-        Drawable appIcon = null;
-        try {
-            appIcon = pm.getApplicationIcon(names[0]);
-        } catch (PackageManager.NameNotFoundException e) {
-            // hurf
-        }
-        if (appIcon != null) {
-            iv.setImageBitmap(((BitmapDrawable) appIcon).getBitmap());
-        }
-
-        return v;
+    private class ViewHolder {
+        public ImageView iv;
     }
 }
